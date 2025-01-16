@@ -3,9 +3,10 @@ const moveButton = document.getElementById('moveButton');
 const timeDisplay = document.getElementById('time');
 const stepsDisplay = document.getElementById('steps');
 const statusDisplay = document.getElementById('status');
-const size = 5;
+const size = 10;
 let agentPosition = { x: 0, y: 0 };
-let mousePosition = { x: 0, y: 0 };
+let bombaPosition = { x: 0, y: 0 };
+let tesouroPosition = { x: 0, y: 0 };
 let steps = 0;
 let elapsedTime = 0;
 let isMoving = true; // Variável para controlar o movimento do agente
@@ -31,16 +32,29 @@ function placeAgent() {
 }
 
 // Função para posicionar o rato
-function placeMouse() {
+function placeBomba() {
     const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => cell.classList.remove('mouse'));
+    cells.forEach(cell => cell.classList.remove('bomba'));
     
     // Gera uma posição aleatória para o rato
-    mousePosition.x = Math.floor(Math.random() * size);
-    mousePosition.y = Math.floor(Math.random() * size);
+    bombaPosition.x = Math.floor(Math.random() * size);
+    bombaPosition.y = Math.floor(Math.random() * size);
     
-    const mouseCell = cells[mousePosition.y * size + mousePosition.x];
-    mouseCell.classList.add('mouse');
+    const bombaCell = cells[bombaPosition.y * size + bombaPosition.x];
+    bombaCell.classList.add('bomba');
+}
+
+// Função para posicionar o tesouro
+function placeTesouro() {
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach(cell => cell.classList.remove('tesouro'));
+    
+    // Gera uma posição aleatória para o rato
+    tesouroPosition.x = Math.floor(Math.random() * size);
+    tesouroPosition.y = Math.floor(Math.random() * size);
+    
+    const tesouroCell = cells[tesouroPosition.y * size + tesouroPosition.x];
+    tesouroCell.classList.add('tesouro');
 }
 
 // Função para mover o agente
@@ -62,19 +76,21 @@ function moveAgent() {
             if (agentPosition.x < size - 1) agentPosition.x++;
             break;
     }
-    /*if(agentPosition.x == 0 && agentPosition.y == 2){
-        console.log("morreu");
-        return;
-    }*/
     
     steps++;
     updateDisplays();
     placeAgent();
     
-    // Verifica se o agente encontrou o rato
-    if (agentPosition.x === mousePosition.x && agentPosition.y === mousePosition.y) {
+    // Verifica se o agente encontrou o tesouro
+    if (agentPosition.x === tesouroPosition.x && agentPosition.y === tesouroPosition.y) {
         isMoving = false; // Para o movimento do agente
-        statusDisplay.textContent = "Agente encontrou o rato!";
+        statusDisplay.textContent = "Agente encontrou o tesouro!";
+    }
+
+    // Verifica se o agente encontrou o rato
+    if (agentPosition.x === bombaPosition.x && agentPosition.y === bombaPosition.y) {
+        isMoving = false; // Para o movimento do agente
+        statusDisplay.textContent = "Agente encontrou a bomba!";
     }
 }
 
@@ -84,9 +100,14 @@ function updateDisplays() {
     timeDisplay.textContent = elapsedTime.toFixed(1);
 }
 
-// Inicializa o agente e o rato
-placeAgent();
-placeMouse();
+// Inicializa os objectos
+function Inicializar() {
+    placeAgent();
+    placeBomba();
+    placeTesouro();
+}
+
+Inicializar();
 
 // Adiciona o evento de mover ao botão
 moveButton.addEventListener('click', moveAgent);
