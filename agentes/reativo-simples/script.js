@@ -3,23 +3,32 @@ const moveButton = document.getElementById('moveButton');
 const timeDisplay = document.getElementById('time');
 const stepsDisplay = document.getElementById('steps');
 const statusDisplay = document.getElementById('status');
-const size = 10;
-let agentPosition = { x: 0, y: 0 };
-let bombaPosition = { x: 0, y: 0 };
-let tesouroPosition = { x: 0, y: 0 };
-let steps = 0;
-let elapsedTime = 0;
-let isMoving = true; // Variável para controlar o movimento do agente
+const sessionDisplay = document.getElementById('session');
 
-// Cria o tabuleiro
-for (let y = 0; y < size; y++) {
-    for (let x = 0; x < size; x++) {
-        const cell = document.createElement('div');
-        cell.classList.add('cell');
-        cell.dataset.x = x;
-        cell.dataset.y = y;
-        board.appendChild(cell);
-        console.log(cell.dataset);
+const size = 10; // Tamanho do tabuleiro (10x10)
+let totalCells = size * size; // Total de células no tabuleiro
+let numeroSession = 0; // Sessão atual
+let agentPosition = { x: 0, y: 0 }; // Posição inicial do agente
+let bombaPositions = []; // Posições das bombas
+let tesouroPosition = { x: 0, y: 0 }; // Posição do tesouro
+let steps = 0; // Passos dados pelo agente
+let elapsedTime = 0; // Tempo decorrido
+let isMoving = true; // Controle do movimento do agente
+let numeroBombas = totalCells * 0.5; // 50% do ambiente começa com bombas
+
+init();
+
+function init() {
+    // Cria o tabuleiro
+    board.innerHTML = ''; // Limpa o tabuleiro antes de criar
+    for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.dataset.x = x;
+            cell.dataset.y = y;
+            board.appendChild(cell);
+        }
     }
 }
 
@@ -34,15 +43,41 @@ function placeAgent() {
 // Função para posicionar o rato
 function placeBomba() {
     const cells = document.querySelectorAll('.cell');
-    cells.forEach(cell => cell.classList.remove('bomba'));
+
+    bombaPositions = []; // Limpa o vetor de bombas antes de adicionar novas
+
+    // Calcula o número de bombas para a sessão atual
+    numeroBombas = numeroSession === 0 
+        ? totalCells * 0.5 
+        : numeroBombas - totalCells * 0.06;
     
-    // Gera uma posição aleatória para o rato
-    bombaPosition.x = Math.floor(Math.random() * size);
-    bombaPosition.y = Math.floor(Math.random() * size);
-    
-    const bombaCell = cells[bombaPosition.y * size + bombaPosition.x];
-    bombaCell.classList.add('bomba');
+    // Garante um limite mínimo de 20 bombas
+    if (numeroBombas < 20) {
+        statusDisplay.textContent = "Todas as sessões concluídas!";
+        isMoving = false;
+        return;
+    }
+
+    cells.forEach(cell => cell.classList.remove('bomba'))
+
+
+    for (let i = 0; i < Math.floor(numeroBombas); i++) {
+        let bombaPosition;
+        do {
+            bombaPosition = {
+                x: Math.floor(Math.random() * size),
+                y: Math.floor(Math.random() * size)
+            };
+        } while (bombaPositions.some(b => b.x === bombaPosition.x && b.y === bombaPosition.y));
+
+        bombaPositions.push(bombaPosition);
+        const bombaCell = cells[bombaPosition.y * size + bombaPosition.x];
+        bombaCell.classList.add('bomba');
+    }
+    console.log(`Total de células: ${totalCells}`);
+    console.log(`Número de bombas: ${numeroBombas}`);
 }
+
 
 // Função para posicionar o tesouro
 function placeTesouro() {
@@ -56,6 +91,7 @@ function placeTesouro() {
     const tesouroCell = cells[tesouroPosition.y * size + tesouroPosition.x];
     tesouroCell.classList.add('tesouro');
 }
+
 
 // Função para mover o agente
 function moveAgent() {
@@ -85,41 +121,57 @@ function moveAgent() {
     if (agentPosition.x === tesouroPosition.x && agentPosition.y === tesouroPosition.y) {
         isMoving = false; // Para o movimento do agente
         statusDisplay.textContent = "Agente encontrou o tesouro!";
+
     }
 
-    // Verifica se o agente encontrou o rato
-    if (agentPosition.x === bombaPosition.x && agentPosition.y === bombaPosition.y) {
-        isMoving = false; // Para o movimento do agente
-        statusDisplay.textContent = "Agente encontrou a bomba!";
+    // Verifica se o agente encontrou uma bomba
+    for (let bomba of bombaPositions) {
+        if (agentPosition.x === bomba.x && agentPosition.y === bomba.y) {
+            isMoving = false;
+            statusDisplay.textContent = "Agente encontrou a bomba!";
+            numeroSession++;
+            Inicializar();
+            break;
+        }
     }
+
+    
 }
 
 // Atualiza as informações exibidas
 function updateDisplays() {
     stepsDisplay.textContent = steps;
+    sessionDisplay.textContent = numeroSession;
     timeDisplay.textContent = elapsedTime.toFixed(1);
 }
 
-// Inicializa os objectos
+// Inicializa o ambiente
 function Inicializar() {
+    isMoving = true;
+    agentPosition = { x: 0, y: 0 };
+    steps = 0;
+    elapsedTime = 0;
     placeAgent();
     placeBomba();
     placeTesouro();
 }
 
-Inicializar();
-
-// Adiciona o evento de mover ao botão
+// Evento do botão para mover manualmente
 moveButton.addEventListener('click', moveAgent);
 
-// Mover o agente automaticamente a cada 1,5 segundos
+// Movimento automático do agente
 const autoMoveInterval = setInterval(() => {
     moveAgent();
-    if (!isMoving) clearInterval(autoMoveInterval); // Para o intervalo se o agente encontrar o rato
+    if (!isMoving && numeroBombas < 20) clearInterval(autoMoveInterval);
 }, 1500);
 
-// Atualiza o tempo decorrido a cada segundo
+// Atualização do tempo decorrido
 setInterval(() => {
-    elapsedTime += 1.5; // Incrementa 1.5 segundos a cada intervalo
-    updateDisplays();
+    if (isMoving) {
+        elapsedTime += 1.5;
+        updateDisplays();
+    }
 }, 1500);
+
+
+Inicializar();
