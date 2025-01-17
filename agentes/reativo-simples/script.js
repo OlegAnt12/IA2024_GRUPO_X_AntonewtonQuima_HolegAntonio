@@ -141,7 +141,7 @@ function moveAgent() {
 // Atualiza as informações exibidas
 function updateDisplays() {
     stepsDisplay.textContent = steps;
-    sessionDisplay.textContent = numeroSession;
+    sessionDisplay.textContent = numeroSession+1;
     timeDisplay.textContent = elapsedTime.toFixed(1);
 }
 
