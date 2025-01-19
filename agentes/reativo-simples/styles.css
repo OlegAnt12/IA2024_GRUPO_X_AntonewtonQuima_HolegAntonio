@@ -70,3 +70,27 @@ body {
     margin-left: 20px;
     text-align: left;
 }
+
+.firstScreen{
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+}
+
+.btns{
+    display: block;
+}
+
+.btn{
+    background-color: #007BFF;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #fff;
+    font-size: large;
+    font-weight: 700;
+}
+.btn:hover{
+    background-color: #2f00ff;
+}
